@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GitHub 中文翻译器</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🌐 GitHub 翻译器</h1>
+    </div>
+
+    <div class="content">
+      <div class="toggle-section">
+        <label class="switch">
+          <input type="checkbox" id="toggleSwitch" checked>
+          <span class="slider"></span>
+        </label>
+        <span class="label-text">启用翻译</span>
+      </div>
+
+      <div class="status-section">
+        <p id="status" class="status">✅ 翻译已启用</p>
+      </div>
+
+      <div class="info-section">
+        <h3>📋 功能说明</h3>
+        <ul>
+          <li>自动翻译 GitHub 页面内容</li>
+          <li>使用免费翻译服务（LibreTranslate）</li>
+          <li>支持快速启用/禁用</li>
+          <li>不需要 API 密钥</li>
+        </ul>
+      </div>
+
+      <div class="footer">
+        <small>版本 1.0.0 | 开源项目</small>
+      </div>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

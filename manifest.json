@@ -1,0 +1,30 @@
+{
+  "manifest_version": 3,
+  "name": "GitHub 中文翻译器",
+  "version": "1.0.0",
+  "description": "将 GitHub 网站的英文内容自动翻译成中文",
+  "permissions": ["activeTab", "scripting", "storage"],
+  "host_permissions": [
+    "https://github.com/*",
+    "https://libretranslate.de/*"
+  ],
+  "action": {
+    "default_popup": "popup.html",
+    "default_title": "GitHub 中文翻译器"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://github.com/*"],
+      "js": ["content.js"],
+      "run_at": "document_end"
+    }
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  }
+}
