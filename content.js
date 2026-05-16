@@ -1,83 +1,67 @@
-// 获取存储的设置
-chrome.storage.local.get(['translatorEnabled'], (result) => {
-  if (result.translatorEnabled !== false) {
-    initializeTranslator();
-  }
-});
+console.log('[翻译] 内容脚本已加载');
 
-// 监听来自 popup 的消息
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+setTimeout(function() {
+  chrome.storage.local.get(['translatorEnabled'], function(result) {
+    console.log('[翻译] 检查状态');
+    if (result.translatorEnabled !== false) {
+      console.log('[翻译] 开始翻译');
+      initTranslator();
+    }
+  });
+}, 2000);
+
+chrome.runtime.onMessage.addListener(function(request, sender, sendResponse) {
+  console.log('[翻译] 收到消息');
   if (request.action === 'toggleTranslator') {
     if (request.enabled) {
-      initializeTranslator();
+      initTranslator();
     } else {
-      removeTranslations();
+      location.reload();
     }
   }
 });
 
-function initializeTranslator() {
-  // 获取页面中所有文本节点
-  const walker = document.createTreeWalker(
-    document.body,
-    NodeFilter.SHOW_TEXT,
-    null,
-    false
-  );
-
-  let node;
-  const nodesToTranslate = [];
-
-  // 收集需要翻译的文本节点
+function initTranslator() {
+  console.log('[翻译] 初始化中');
+  var nodes = [];
+  var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+  var node;
+  
   while (node = walker.nextNode()) {
-    const text = node.textContent.trim();
-    // 过滤出有意义的英文文本（长度 > 3）
-    if (text.length > 3 && /[a-zA-Z]/.test(text) && !isAlreadyTranslated(node)) {
-      nodesToTranslate.push(node);
+    var txt = node.textContent.trim();
+    if (txt.length > 3 && /[a-zA-Z]/.test(txt)) {
+      nodes.push({n: node, t: txt});
     }
   }
-
-  // 分批翻译（避免一次性过多请求）
-  translateNodesBatch(nodesToTranslate, 0);
+  
+  console.log('[翻译] 找到' + nodes.length + '个节点');
+  if (nodes.length > 0) {
+    translateAll(nodes, 0);
+  }
 }
 
-function translateNodesBatch(nodes, startIndex, batchSize = 5) {
-  if (startIndex >= nodes.length) return;
-
-  const batch = nodes.slice(startIndex, startIndex + batchSize);
-  const textsToTranslate = batch.map(node => node.textContent.trim());
-
-  chrome.runtime.sendMessage(
-    {
-      action: 'translate',
-      texts: textsToTranslate,
-      targetLang: 'zh'
-    },
-    (response) => {
-      if (response && response.translations) {
-        response.translations.forEach((translation, index) => {
-          batch[index].textContent = translation;
-          batch[index].setAttribute('data-translated', 'true');
-        });
+function translateAll(nodes, idx) {
+  if (idx >= nodes.length) {
+    console.log('[翻译] 完成');
+    return;
+  }
+  
+  var batch = nodes.slice(idx, idx + 5);
+  var txts = [];
+  for (var i = 0; i < batch.length; i++) {
+    txts.push(batch[i].t);
+  }
+  
+  console.log('[翻译] 翻译' + (idx + 1) + '-' + (idx + batch.length));
+  
+  chrome.runtime.sendMessage({action: 'translate', texts: txts, targetLang: 'zh'}, function(res) {
+    if (res && res.translations) {
+      for (var i = 0; i < batch.length; i++) {
+        batch[i].n.textContent = res.translations[i];
       }
-
-      // 递归处理下一批
-      setTimeout(() => {
-        translateNodesBatch(nodes, startIndex + batchSize, batchSize);
-      }, 500);
     }
-  );
-}
-
-function isAlreadyTranslated(node) {
-  return node.getAttribute('data-translated') === 'true' ||
-    node.closest('[data-translated="true"]') !== null;
-}
-
-function removeTranslations() {
-  const translatedNodes = document.querySelectorAll('[data-translated="true"]');
-  translatedNodes.forEach(node => {
-    node.removeAttribute('data-translated');
+    setTimeout(function() {
+      translateAll(nodes, idx + 5);
+    }, 800);
   });
-  location.reload();
 }
